@@ -29,11 +29,12 @@ import os
 
 class UI(tk.Tk):
     bg_color = "#1e1e1e"
+    frame_color = "#292929"
     def __init__(self):
         super().__init__()
         
-        self.w_win = 800
-        self.h_win = 600
+        self.w_win = 1_100
+        self.h_win = 650
         _x_win = (self.winfo_screenwidth() // 2) - (self.w_win//2)
         _y_win = (self.winfo_screenheight() // 2) - (self.h_win//2)
         
@@ -61,7 +62,7 @@ class UI(tk.Tk):
 
         # Le ponemos una sección y lo asignamos al menú de la ventana
         tools = tk.Menu(main_menu, tearoff=0)
-        main_menu.add_cascade(label="Archivo", menu=tools) # En formato de cascada!
+        main_menu.add_cascade(label="Configuración", menu=tools) # En formato de cascada!
 
         # Creamos elementos para ese menú
         tools.add_command(label="Abrir ruta de descargas", command=lambda:self.open_in_explorer())
@@ -124,17 +125,28 @@ class UI(tk.Tk):
         _y = self.h_win // 10
 
         form = tk.Frame(self)
-        form.config(bg=UI.bg_color, width=self.w_win, height=_y*4.2) #bg=UI.bg_color
-        form.pack(padx=_x, pady=_y)
+        form.config(bg=UI.frame_color) #bg=UI.bg_color, , width=150, height=_y*4.2
+        # form.place(relx=0.5, rely=0.5, relwidth=0.5, relheight=0.15, anchor="c")
+        form.pack(pady=self.h_win//4)
 
         # Creamos el campo de texto para que el usuario ingrese el link
         url = tk.StringVar()
         entry = tk.Entry(form, textvariable=url)
-        entry.config(width=int(self.w_win*0.8), font=("Georgia", 15))
-        entry.pack(pady=_y*2)
+        entry.config(width=50, font=("Open Sans", 12), borderwidth=10, relief=tk.FLAT) #int((self.w_win*0.05))
+        # entry.place(relx=0.5, rely=0.5, anchor="c")
+        entry.grid(row=1, column=1, columnspan=3, padx=15, pady=20)
+        # entry.pack(pady=_y*2)
 
         # Creamos un botón para que el usuario comience su descarga
-        
+        def thing():
+            pass
+        img_download = tk.PhotoImage(file='img/botones/online/download.png')
+        btn_download = tk.Button(form, image=img_download, command=thing)
+        btn_download.config(borderwidth=0, bg=UI.frame_color, activebackground=UI.frame_color, cursor="hand2")
+        # btn_download.place(relx=0.5, rely=0.5, anchor="c")
+        btn_download.image = img_download
+        btn_download.grid(row=2, column=2, pady=10)
+        # btn_download.pack()
 
     def showApps(self) -> None:
         """
@@ -145,6 +157,10 @@ class UI(tk.Tk):
         None
         """
         
+        apps = tk.Frame(self)
+        apps.config(bg=UI.frame_color)
+        apps.pack()
+
         _x = self.w_win * 0.04
         _y = self.h_win / 3
         
