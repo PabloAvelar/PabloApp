@@ -30,13 +30,14 @@ import os
 class UI(tk.Tk):
     bg_color = "#1e1e1e"
     frame_color = "#292929"
-    def __init__(self):
+    def __init__(self, title, size):
         super().__init__()
-        
-        self.w_win = 1_100
-        self.h_win = 650
-        _x_win = (self.winfo_screenwidth() // 2) - (self.w_win//2)
-        _y_win = (self.winfo_screenheight() // 2) - (self.h_win//2)
+
+        _x_win = (self.winfo_screenwidth() // 2) - (size[0]//2)
+        _y_win = (self.winfo_screenheight() // 2) - (size[1]//2)
+
+        self.title(title)
+        self.geometry(f'{size[0]}x{size[1]}+{_x_win}+{_y_win}')
         
         # Recursos #
         self.resources = {
@@ -49,10 +50,10 @@ class UI(tk.Tk):
             "socialmedia": tk.PhotoImage(file='img/botones/redes.png')
         }
         
-        self.geometry(f'{self.w_win}x{self.h_win}+{_x_win}+{_y_win}')
+        
         # self.resizable(False, False)
         self.iconbitmap('img/logo/icono_app.ico')
-        self.title('PabloApp')
+        
         
         self.config(bg=UI.bg_color)
         
@@ -69,8 +70,10 @@ class UI(tk.Tk):
         tools.add_command(label="Cambiar ruta de descargas", command=lambda:print("Cambiar ruta"))
         tools.add_command(label="Acerca de", command=lambda:print("Acerca de"))
 
+        self.showHeader()
         self.showApps()
         self.showForm()
+        self.showFooter()
 
     
     @property
@@ -127,7 +130,8 @@ class UI(tk.Tk):
         form = tk.Frame(self)
         form.config(bg=UI.frame_color) #bg=UI.bg_color, , width=150, height=_y*4.2
         # form.place(relx=0.5, rely=0.5, relwidth=0.5, relheight=0.15, anchor="c")
-        form.pack(pady=self.h_win//4)
+        # form.pack(pady=self.h_win//4)
+        form.grid(row=1, column=1)
 
         # Creamos el campo de texto para que el usuario ingrese el link
         url = tk.StringVar()
@@ -159,15 +163,10 @@ class UI(tk.Tk):
         
         apps = tk.Frame(self)
         apps.config(bg=UI.frame_color)
-        apps.pack()
+        apps.grid(row=1, column=0)
 
         _x = self.w_win * 0.04
         _y = self.h_win / 3
-        
-        self.header = tk.Label(self,
-                 image=self.resources["header"],
-                 bg=UI.bg_color)
-        self.header.pack()
         
         self.fb_app = tk.Label(self,
                                image=self.resources["logo_fb"], 
@@ -189,9 +188,25 @@ class UI(tk.Tk):
         _y += 100
         self.yt_app.place(x=_x, y = _y)
         
-            
+
+    def showHeader(self):
+        header = tk.Frame(self)
+        header.grid(row=0, column=1)
+
+        logo = tk.Label(header,
+                 image=self.resources["header"],
+                 bg=UI.bg_color)
+        logo.pack()
+
+    def showFooter(self):
+        footer = tk.Frame(self)
+        footer.config(bg=UI.frame_color)
+        footer.grid(row=2, column=1, columnspan=3)
+
+        tk.Label(footer, text="hola").pack()
+
 if __name__ == '__main__':
-    root = UI()
+    root = UI('PabloApp', (600, 1_000))
     root.mainloop()
         
         
