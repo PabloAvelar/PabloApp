@@ -25,7 +25,9 @@ la aplicación, sin cerrar procesos o algo así. Así sin cerrar ventanas y eso
 
 import tkinter as tk
 from tkinter import ttk
+from tkinter.font import Font
 import SocialMedia as sm
+import webbrowser
 import os
 
 class UI(tk.Tk):
@@ -33,15 +35,33 @@ class UI(tk.Tk):
         # Main setup
         super().__init__()
 
+        
+        # Para que la ventana aparezca en medio de la pantalla
         _x_win = (self.winfo_screenwidth() // 2) - (size[0]//2)
         _y_win = (self.winfo_screenheight() // 2) - (size[1]//2)
 
         self.title(title)
         self.geometry(f'{size[0]}x{size[1]}+{_x_win}+{_y_win}')
-        
+        self.minsize(size[0], size[1])
+        self.maxsize(1_000, 650)
+
         # Recursos #
         self.bg_color = "#1e1e1e"
+        self.fg_color = "#F7F7F7"
+        self.fg2_color = "#008001"
         self.frame_color = "#292929"
+
+        # Fonts
+        self.title_font = Font(
+            family="Arial",
+            size=12,
+            weight="bold"
+        )
+
+        self.subtitle_font = Font(
+            family="Arial",
+            size=10,
+        )
 
         self.resources = {
             "header": tk.PhotoImage(file='img/logo/pabloapp_texto.png'),
@@ -57,31 +77,33 @@ class UI(tk.Tk):
         # self.resizable(False, False)
         self.iconbitmap('img/logo/icono_app.ico')
         
-        
+        # El footer de la app con los terminos y condiciones
+        self.footer = Footer(self)
+
         # Creando el menú de la ventana
         self.menu = Menu(self)
 
         # Configuraciones
         self.config(bg=self.bg_color, menu=self.menu)
 
+
         # El header de la app
         self.header = Header(self)
+
+        # El frame de la derecha con las apps
+        self.apps = Apps(self)
+        
 
         # Formulario para descargar el contenido
         self.form = Form(self)
 
-        # El footer de la app
-        self.footer = Footer(self)
-
-        # El frame de la derecha con las apps
-        self.apps = Apps(self)
+        # Estilos de los frames ttk
+        _style = ttk.Style()
+        _style.configure('TFrame', background=self.frame_color)   
 
         # Arrancar
         self.mainloop()
 
-        
-
-    
     @property
     def path(self) -> str:
         """ Devuelve: la ruta donde se descargan los videos -> str"""
@@ -136,8 +158,6 @@ class Menu(tk.Menu):
         tools.add_command(label="Cambiar ruta de descargas", command=lambda:print("Cambiar ruta"))
         tools.add_command(label="Acerca de", command=lambda:print("Acerca de"))
 
-
-
 class Form(ttk.Frame):
     """
     Muestra en la interfaz gráfica un campo de texto y un botón
@@ -153,27 +173,44 @@ class Form(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
-        # self.config(bg=parent.frame_color) #bg=parent.bg_color, , width=150, height=_y*4.2
-        # self.place(relx=0.5, rely=0.5, relwidth=0.5, relheight=0.15, anchor="c")
-        self.grid(row=1, column=1)
+        self.pack(side="top", expand=True)
         
         self.create_widgets()
 
     def create_widgets(self):
+
+        # Etiqueta del formulario
+        txt = tk.Label(self, text="Ingresa el link de tu video")
+        txt.config(bg=self.parent.frame_color,
+                   fg=self.parent.fg_color,
+                   font=self.parent.title_font
+                   )
+        txt.pack(pady=18)
+
         # Creamos el campo de texto para que el usuario ingrese el link
         url = tk.StringVar()
         entry = tk.Entry(self, textvariable=url)
-        entry.config(width=50, font=("Open Sans", 12), borderwidth=10, relief=tk.FLAT) #int((self.w_win*0.05))
-        entry.grid(row=1, column=1, columnspan=3, padx=15, pady=20)
+        _width = int(self.parent.winfo_width() * 0.04)
+        entry.config(width=_width, fg=self.parent.fg2_color, font=self.parent.subtitle_font, borderwidth=10, relief=tk.FLAT) #int((self.w_win*0.05))
+        entry.pack(side="left", padx=18)
 
         # Creamos un botón para que el usuario comience su descarga
         def thing():
             pass
-        img_download = tk.PhotoImage(file='img/botones/online/download.png')
-        btn_download = tk.Button(self, image=img_download, command=thing)
-        btn_download.config(borderwidth=0, bg=self.parent.frame_color, activebackground=self.parent.frame_color, cursor="hand2")
-        btn_download.image = img_download
-        btn_download.grid(row=2, column=2, pady=10)
+        # img_download = tk.PhotoImage(file='img/botones/online/download.png')
+        btn_download = tk.Button(self, command=thing)
+        btn_download.config(borderwidth=0,
+                            bg="#006312",
+                            fg=self.parent.fg_color,
+                            font=self.parent.title_font,
+                            text="Descargar",
+                            width=14,
+                            height=2,
+                            activebackground="#006312",
+                            cursor="hand2"
+                            )
+        # btn_download.image = img_download
+        btn_download.pack(side="left", padx=18, pady=18)
 
 class Apps(ttk.Frame):
     """
@@ -185,50 +222,73 @@ class Apps(ttk.Frame):
     """
     def __init__(self, parent):
         super().__init__(parent)
-        # self.config(bg=parent.frame_color)
-        self.grid(row=1, column=0)
+        self.pack(side="left", fill="y", padx=10, pady=10)
 
-        _x = 1_000 * 0.04
-        _y = 600 / 3
-        
+        # Texto informativo sobre este frame
+        text = tk.Label(self, text="Descarga contenido de:")
+        text.config(bg=parent.frame_color,
+                    fg=parent.fg_color,
+                    font=parent.subtitle_font
+                    )
+        text.pack(padx=15, pady=5, expand="yes")
+
+        # Logos de las redes sociales
         fb_app = tk.Label(self,
                                image=parent.resources["logo_fb"], 
-                               bg=parent.bg_color
+                               bg=parent.frame_color
                                )
-        fb_app.place(x=_x, y=_y)
+        fb_app.pack(padx=15, pady=30)
 
         ig_app = tk.Label(self,
                                image=parent.resources["logo_ig"],
-                               bg=parent.bg_color
+                               bg=parent.frame_color
                                )
-        _y += 100
-        ig_app.place(x=_x, y = _y)
+        ig_app.pack(padx=15, pady=30)
 
         yt_app = tk.Label(self,
                                image=parent.resources["logo_yt"],
-                               bg=parent.bg_color
+                               bg=parent.frame_color
                                )
-        _y += 100
-        yt_app.place(x=_x, y = _y)
+        yt_app.pack(padx=15, pady=30)
 
 class Header(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
 
-        self.grid(row=0, column=1)
+        # self.grid(row=0, column=1)
+        self.pack(side='top', fill=tk.X, padx=10, pady=10)
         logo = tk.Label(self,
                  image=parent.resources["header"],
-                 bg=parent.bg_color)
+                 bg=parent.frame_color)
         logo.pack()
 
 class Footer(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
+        # self.config(width=900)
+        self.pack(side="bottom", fill="x", padx=10, pady=10) #, fill="x"
 
-        # self.config(bg=parent.frame_color)
-        self.grid(row=2, column=1, columnspan=3)
+        # Etiquetas de texto del footer
+        _myname = tk.Label(self,
+                 text="Pablo Avelar Armenta",
+                 bg=parent.frame_color,
+                 fg=parent.fg_color,
+                 font=parent.title_font
+                 )
+        _myname.pack(pady=5)
 
-        tk.Label(self, text="hola").pack()
+        _disclaimer = tk.Label(self,
+                 text="Terminos y condiciones",
+                 bg=parent.frame_color,
+                 fg=parent.fg_color,
+                 font=parent.subtitle_font,
+                 underline=True,
+                 cursor="hand2"
+                 )
+        _disclaimer.pack(pady=5)
+
+        _disclaimer.bind('<Button-1>', lambda e: webbrowser.open_new("https://pabloavelar.mx/"))
+
 
 if __name__ == '__main__':
-    UI('PabloApp', (1_000, 600))
+    UI('PabloApp', (900, 600))
