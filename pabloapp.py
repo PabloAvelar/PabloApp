@@ -26,7 +26,7 @@ la aplicación, sin cerrar procesos o algo así. Así sin cerrar ventanas y eso
 import tkinter as tk
 from tkinter import ttk
 import customtkinter as ctk
-from tkinter.font import Font
+from PIL import Image
 import SocialMedia as sm
 import webbrowser
 import os
@@ -75,13 +75,13 @@ class UI(ctk.CTk):
         self.fg_hover_yt = "#B7201F"
 
         self.resources = {
-            "header": tk.PhotoImage(file='img/logo/pabloapp_texto.png'),
-            "logo_fb": tk.PhotoImage(file='img/redes/fblogo.png'),
-            "logo_ig": tk.PhotoImage(file='img/redes/iglogo.png'),
-            "logo_yt": tk.PhotoImage(file='img/redes/ytlogo.png'),
-            "open": tk.PhotoImage(file='img/botones/abrir.png'),
-            "download": tk.PhotoImage(file='img/botones/descargar.png'),
-            "socialmedia": tk.PhotoImage(file='img/botones/redes.png')
+            "header": ctk.CTkImage(light_image=Image.open('img/logo/pabloapp_texto.png'), size=(260,100)),
+            "logo_fb": ctk.CTkImage(light_image=Image.open('img/redes/fblogo.png'), size=(50,50)),
+            "logo_ig": ctk.CTkImage(light_image=Image.open('img/redes/iglogo.png'), size=(50,50)),
+            "logo_yt": ctk.CTkImage(light_image=Image.open('img/redes/ytlogo.png'), size=(50,50)),
+            "open": ctk.CTkImage(light_image=Image.open('img/botones/abrir.png'), size=(50,50)),
+            "download": ctk.CTkImage(light_image=Image.open('img/botones/descargar.png'), size=(50,50)),
+            "socialmedia": ctk.CTkImage(light_image=Image.open('img/botones/redes.png'), size=(50,50))
         }
         
         
@@ -214,7 +214,7 @@ class Form(ctk.CTkFrame):
         # Creamos un botón para que el usuario comience su descarga
         def thing():
             pass
-        # img_download = tk.PhotoImage(file='img/botones/online/download.png')
+        # img_download = ctk.CTkImage(light_image=Image.open('img/botones/online/download.png', size=(50,50)))
         btn_download = ctk.CTkButton(self, command=thing)
         btn_download.configure(
                             fg_color="#33b249",
