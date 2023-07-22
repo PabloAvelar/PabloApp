@@ -75,7 +75,7 @@ class UI(ctk.CTk):
         self.fg_hover_yt = "#B7201F"
 
         self.resources = {
-            "header": ctk.CTkImage(light_image=Image.open('img/logo/pabloapp_texto.png'), size=(260,100)),
+            "header": ctk.CTkImage(light_image=Image.open('img/logo/pabloapp_texto.png'), size=(300,90)),
             "logo_fb": ctk.CTkImage(light_image=Image.open('img/redes/fblogo.png'), size=(50,50)),
             "logo_ig": ctk.CTkImage(light_image=Image.open('img/redes/iglogo.png'), size=(50,50)),
             "logo_yt": ctk.CTkImage(light_image=Image.open('img/redes/ytlogo.png'), size=(50,50)),
