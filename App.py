@@ -17,8 +17,13 @@ import os
 # from tkinter import filedialog
 
 class App:
+    def __init__(self, link) -> None:
+        """
+        Este activará la barra de carga indeterminada con multihilo
+        """
+        self.link = link
 
-    
+
     def download(link:str) -> bool:
         """
 

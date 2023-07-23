@@ -95,7 +95,7 @@ class UI(ctk.CTk):
         self.menu = Menu(self)
 
         # Configuraciones
-        # self.configure(fg_color=self.bg_color, menu=self.menu)
+        self.configure(menu=self.menu) #fg_color=self.bg_color, 
 
 
         # El header de la app
@@ -207,9 +207,11 @@ class Form(ctk.CTkFrame):
                         height=45,
                         corner_radius=8,
                         text_color="#33b249",
-                        font=self.parent.subtitle_font
+                        font=self.parent.subtitle_font,
+                        textvariable=url
                         )
         entry.pack(side="left", padx=18)
+
 
         # Creamos un botón para que el usuario comience su descarga
         def thing():
@@ -224,10 +226,37 @@ class Form(ctk.CTkFrame):
                             text="Descargar",
                             corner_radius=8,
                             border_spacing=13,
-                            cursor="hand2"
+                            cursor="hand2",
+                            command=lambda:self.startDownload(url.get())
                             )
         # btn_download.image = img_download
         btn_download.pack(side="left", padx=18, pady=18)
+
+        # Función para que el botón cambie de color
+        def checkURL() -> None:
+            if "facebook.co" in url.get():
+                btn_download.configure(fg_color=self.parent.fg_fb, hover_color=self.parent.fg_hover_fb)
+            elif "instagram.co" in url.get():
+                btn_download.configure(fg_color=self.parent.fg_ig, hover_color=self.parent.fg_hover_ig)
+            elif "youtube.co" in url.get():
+                btn_download.configure(fg_color=self.parent.fg_yt, hover_color=self.parent.fg_hover_yt)
+            else:
+                btn_download.configure(fg_color="#33b249")
+
+        # Para que el botón cambie de color si se detecta algo en la URL
+        entry.bind("<KeyRelease>", lambda event:checkURL())
+        entry.bind("<Return>", lambda e:self.startDownload(url.get()))
+
+    def startDownload(self, link):
+        if "facebook.com" in link:
+            print(sm.Facebook(link, self.parent.path))
+        elif "instagram.com" in link:
+            pass
+        elif "youtube.com" in link:
+            pass
+        else:
+            print("link no válido")
+
 
 class Apps(ctk.CTkFrame):
     """
