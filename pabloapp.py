@@ -119,15 +119,18 @@ class UI(ctk.CTk):
     def path(self) -> str:
         """ Devuelve: la ruta donde se descargan los videos -> str"""
         directory = os.getcwd()+"\\Downloads" # Es el directorio por defecto DONDE ESTÁ UBICADO EL PROGRAMA
-        with open(os.getcwd()+"\\dir\\dir.txt", "w+") as f:
-            if len(f.read()) == 0:
+        with open(os.getcwd()+"\\dir\\dir.txt", "r+") as f:
+            _txt = f.read()
+            if len(_txt) == 0:
                 # Si no hay nada, se pone el directorio por defecto
                 # Esto se suele hacer cuando es la primera vez que se abre el programa.
+                f.seek(0)
                 f.write(directory)
+                f.truncate()
             else:
                 # Si ya tenemos el directorio en un archivo, cambiamos el valor
                 # de "directory", que será lo que devolverá esta función.
-                directory = f.read()
+                directory = _txt
             
             f.close()
         return directory
@@ -140,13 +143,9 @@ class UI(ctk.CTk):
             Devuelve: nada
         """
         if len(new_path) > 0:
-            with open(os.getcwd()+"\\Downloads\\dir.txt", "w") as f:
+            with open(os.getcwd()+"\\dir\\dir.txt", "w") as f:
                 f.write(new_path)
                 f.close()
-
-    def open_in_explorer(self) -> None:
-        """ Abre el directorio en el explorador de archivos """
-        os.startfile(self.path)
 
 class Menu(tk.Menu):
     """
@@ -155,9 +154,26 @@ class Menu(tk.Menu):
 
     def __init__(self, parent):
         super().__init__(parent)
+        self.parent = parent
         
         # Creando secciones del menú
         self.create_section()
+
+    @classmethod
+    def open_in_explorer(cls, path:str) -> None:
+        """ Abre el directorio en el explorador de archivos """
+        os.startfile(path)
+
+    def changeDirectory(self) -> None:
+        """
+        Cambia el directorio donde se guardarán los videos
+        """
+
+        # Abre el explorador de archivos para indicar qué directorio usar
+        new_path = tk.filedialog.askdirectory()
+
+        # Cambia la ruta
+        self.parent.path = new_path
         
     def create_section(self):
         # Asignamos una sección con cascada
@@ -165,8 +181,8 @@ class Menu(tk.Menu):
         self.add_cascade(label="Configuración", menu=tools)
         
         # Creamos elementos para ese menú
-        tools.add_command(label="Abrir ruta de descargas", command=lambda:self.open_in_explorer())
-        tools.add_command(label="Cambiar ruta de descargas", command=lambda:print("Cambiar ruta"))
+        tools.add_command(label="Abrir ruta de descargas", command=lambda:Menu.open_in_explorer(self.parent.path))
+        tools.add_command(label="Cambiar ruta de descargas", command=lambda:self.changeDirectory())
         tools.add_command(label="Acerca de", command=lambda:print("Acerca de"))
 
 class Form(ctk.CTkFrame):
