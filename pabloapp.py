@@ -27,7 +27,7 @@ import tkinter as tk
 from tkinter import ttk
 import customtkinter as ctk
 from PIL import Image
-import SocialMedia as sm
+from App import App
 import webbrowser
 import os
 
@@ -230,10 +230,7 @@ class Form(ctk.CTkFrame):
 
 
         # Creamos un botón para que el usuario comience su descarga
-        def thing():
-            pass
-        # img_download = ctk.CTkImage(light_image=Image.open('img/botones/online/download.png', size=(50,50)))
-        btn_download = ctk.CTkButton(self, command=thing)
+        btn_download = ctk.CTkButton(self)
         btn_download.configure(
                             fg_color="#33b249",
                             hover_color="#2D9A40",
@@ -243,7 +240,7 @@ class Form(ctk.CTkFrame):
                             corner_radius=8,
                             border_spacing=13,
                             cursor="hand2",
-                            command=lambda:self.startDownload(url.get())
+                            command=lambda:App(url.get(), self.parent.path)
                             )
         # btn_download.image = img_download
         btn_download.pack(side="left", padx=18, pady=18)
@@ -261,17 +258,19 @@ class Form(ctk.CTkFrame):
 
         # Para que el botón cambie de color si se detecta algo en la URL
         entry.bind("<KeyRelease>", lambda event:checkURL())
-        entry.bind("<Return>", lambda e:self.startDownload(url.get()))
+        entry.bind("<Return>", lambda e:App(url.get(), self.parent.path))
 
-    def startDownload(self, link):
-        if "facebook.com" in link:
-            print(sm.Facebook(link, self.parent.path))
-        elif "instagram.com" in link:
-            pass
-        elif "youtube.com" in link:
-            pass
-        else:
-            print("link no válido")
+    # def startDownload(self, link):
+        
+        # if "facebook.com" in link:
+        #     print(sm.Facebook(link, self.parent.path))
+        # elif "instagram.com" in link:
+        #     pass
+        # elif "youtube.com" in link:
+        #     pass
+        # else:
+        #     print("link no válido")
+
 
 
 class Apps(ctk.CTkFrame):

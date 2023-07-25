@@ -13,18 +13,47 @@ De aquí van a heredar las clases:
     YouTube
 
 """
-import os
+import youtube_dl
+import re
 # from tkinter import filedialog
 
 class App:
-    def __init__(self, link) -> None:
+    def __init__(self, link, path) -> None:
         """
         Este activará la barra de carga indeterminada con multihilo
         """
         self.link = link
+        self.path = path
+
+        if "facebook.com" in self.link:
+            self.facebook()
+        elif "instagram.com" in self.link:
+            self.instagram()
+        else:
+            raise ValueError("Link inválido")
 
 
-    def download(link:str) -> bool:
+    def facebook(self):
+        """
+        Algorithm for Facebook videos
+        """
+        name = "".join(re.findall('\d{15}', self.link))
+        options = {
+            'outtmpl': f'{self.path}/{name}.mp4'
+        }
+
+        with youtube_dl.YoutubeDL(options) as ytdl:
+            ytdl.download([self.link])
+
+    def instagram(self):
+        """
+        Algorithm for instagram videos
+        """
+        pass
+
+
+
+    # def download(link:str) -> bool:
         """
 
         Parameters
@@ -39,4 +68,4 @@ class App:
 
         """
 
-        raise NotImplementedError
+        # raise NotImplementedError
