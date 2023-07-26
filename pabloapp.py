@@ -260,19 +260,6 @@ class Form(ctk.CTkFrame):
         entry.bind("<KeyRelease>", lambda event:checkURL())
         entry.bind("<Return>", lambda e:App(url.get(), self.parent.path))
 
-    # def startDownload(self, link):
-        
-        # if "facebook.com" in link:
-        #     print(sm.Facebook(link, self.parent.path))
-        # elif "instagram.com" in link:
-        #     pass
-        # elif "youtube.com" in link:
-        #     pass
-        # else:
-        #     print("link no válido")
-
-
-
 class Apps(ctk.CTkFrame):
     """
     Muestra en la interfaz gráfica los botones

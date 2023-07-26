@@ -15,7 +15,7 @@ De aquí van a heredar las clases:
 """
 import youtube_dl
 import re
-# from tkinter import filedialog
+import requests
 
 class App:
     def __init__(self, link, path) -> None:
@@ -49,23 +49,44 @@ class App:
         """
         Algorithm for instagram videos
         """
-        pass
+
+        # It'll be the source URL of the video.
+        url_video = None
+
+        # Trying to get content from the link
+        def prepare_url(url):
+                url = url.replace('\\/', '/')
+                url = url.replace("\\u0025", "%")
+                
+                return url
+        
+        def getName():
+            return "".join(re.findall(r'[l|p]/(.{11})/?', self.link))
+        
+        try:
+            # Getting access and content
+            r = requests.get(self.link)
+            content = r.text
+
+            # Getting the URL from the source of the actual video from the post
+            get_url = re.findall(r'"contentUrl":"([^"]+)"', content)[0]
+
+            # Preparing the url 
+            url = prepare_url(get_url)
+            url_video = requests.get(url)
+
+        except:
+            raise requests.exceptions.ConnectionError
 
 
-
-    # def download(link:str) -> bool:
-        """
-
-        Parameters
-        ----------
-        link : str
-            El link del video a descargar.
-
-        Returns
-        -------
-        bool
-            Regresa True si el video logró descargarse con éxito.
-
-        """
-
-        # raise NotImplementedError
+        if url_video != None:
+            try:
+                with open(f'{self.path}/{getName()}.mp4', 'wb') as video:
+                    for data in url_video.iter_content(chunk_size=None):
+                        video.write(data)
+                        print("Writing data into the video...")
+                print("The download is finished!")
+            except Exception as e:
+                raise requests.exceptions.ContentDecodingError
+        else:
+            raise requests.exceptions.URLRequired
