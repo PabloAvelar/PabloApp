@@ -16,6 +16,7 @@ De aquí van a heredar las clases:
 import youtube_dl
 import re
 import requests
+from bs4 import BeautifulSoup as BS
 
 class App:
     def __init__(self, link, path) -> None:
@@ -29,14 +30,27 @@ class App:
             self.facebook()
         elif "instagram.com" in self.link:
             self.instagram()
+        elif "youtube.com" in self.link:
+            self.youtube()
         else:
             raise ValueError("Link inválido")
 
 
-    def facebook(self):
+    def facebook(self) -> None:
         """
         Algorithm for Facebook videos
         """
+
+        # Because YouTubeDL cannot download reels from facebook,
+        # web scraping will be the solution, replacing "www" with "m" from the given link.
+        if 'reel' in self.link:
+            self.link = self.link.replace("www", "m")
+            
+            url_reel = requests.get(self.link)
+            content = url_reel.content
+
+            
+            return
         name = "".join(re.findall('\d{15}', self.link))
         options = {
             'outtmpl': f'{self.path}/{name}.mp4'
@@ -44,8 +58,9 @@ class App:
 
         with youtube_dl.YoutubeDL(options) as ytdl:
             ytdl.download([self.link])
+  
+    def instagram(self) -> None:
 
-    def instagram(self):
         """
         Algorithm for instagram videos
         """
@@ -90,3 +105,48 @@ class App:
                 raise requests.exceptions.ContentDecodingError
         else:
             raise requests.exceptions.URLRequired
+        
+    def youtube(self) -> None:
+        """
+        Algorithm for YouTube videos.
+        In this case, the algorithm will perform a web scrape to a webpage that provides those
+        URL videos to be downloaded. It extracts the first link from the that webpage
+        in order to download the video with the highest quality possible.
+
+        This may change in the future. 
+
+        This webpage is: https://10downloader.com/
+        """
+
+        # Replacing "you" (from 'youtube.com') with "000" to be redirect to the tool webpage.
+        url = re.sub(r'[www]?(you)', '000', self.link)
+
+        # Sending a request to the tool webpage and getting its content.
+        tool_website = requests.get(url)
+        content = tool_website.text
+
+        # Beautiful Soup will be used for scrape the content
+        soup = BS(content, 'lxml')
+
+        # Getting the first downloable link (The Highest Quality)
+        tag_highest_quality = soup.find_all('a', 'downloadBtn')[0]
+        url_to_download = tag_highest_quality.get('href')
+
+        # Getting the filename and making it a valid filename
+        invalid = '<>:"/\|?* '
+        filename = tag_highest_quality.get('download')
+        for char in invalid:
+            filename = filename.replace(char, '')
+
+        # Sending another request to the source URL video
+        download_url = requests.get(url_to_download, stream=True)
+
+        # Downloading the video from its source URL
+        try:
+            with open(f'{self.path}/{filename}.mp4', 'wb') as video:
+                for data in download_url.iter_content(chunk_size=None):
+                    video.write(data)
+        except Exception as e:
+            print('Error al descargar el video: ', e)
+        finally:
+            print("Proceso terminado.")
