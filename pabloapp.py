@@ -36,15 +36,16 @@ class UI(ctk.CTk):
         # Main setup
         super().__init__(fg_color="#1e1e1e")
 
+        # App instance
+        self.app = App()
         
-        # Para que la ventana aparezca en medio de la pantalla
+        # This shows the window in the middle of the screen
         _x_win = (self.winfo_screenwidth() // 2) - (size[0]//2)
         _y_win = (self.winfo_screenheight() // 2) - (size[1]//2)
 
         self.title(title)
         self.geometry(f'{size[0]}x{size[1]}+{_x_win}+{_y_win}')
         self.minsize(size[0], size[1])
-        # self.maxsize(1_000, 650)
 
         # Recursos #
         self.bg_color = "#1e1e1e"
@@ -204,6 +205,15 @@ class Form(ctk.CTkFrame):
         
         self.create_widgets()
 
+    def download(self, url):
+        # Re-assigning values to the App instance.
+        self.parent.app.link = url
+        self.parent.app.path = self.parent.path
+
+        # Initializing the downloader
+        self.parent.app.download()
+
+
     def create_widgets(self):
 
         # Etiqueta del formulario
@@ -240,7 +250,7 @@ class Form(ctk.CTkFrame):
                             corner_radius=8,
                             border_spacing=13,
                             cursor="hand2",
-                            command=lambda:App(url.get(), self.parent.path)
+                            command=lambda:self.download(url.get())
                             )
         # btn_download.image = img_download
         btn_download.pack(side="left", padx=18, pady=18)
@@ -258,7 +268,7 @@ class Form(ctk.CTkFrame):
 
         # Para que el botón cambie de color si se detecta algo en la URL
         entry.bind("<KeyRelease>", lambda event:checkURL())
-        entry.bind("<Return>", lambda e:App(url.get(), self.parent.path))
+        entry.bind("<Return>", lambda e:self.download(url.get()))
 
 class Apps(ctk.CTkFrame):
     """

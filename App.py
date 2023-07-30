@@ -19,13 +19,15 @@ import requests
 from bs4 import BeautifulSoup as BS
 
 class App:
-    def __init__(self, link, path) -> None:
+    def __init__(self, link=None, path=None) -> None:
         """
         Este activará la barra de carga indeterminada con multihilo
         """
         self.link = link
         self.path = path
+        
 
+    def download(self):
         if "facebook.com" in self.link:
             self.facebook()
         elif "instagram.com" in self.link:
@@ -34,7 +36,6 @@ class App:
             self.youtube()
         else:
             raise ValueError("Link inválido")
-
 
     def facebook(self) -> None:
         """
