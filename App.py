@@ -51,12 +51,12 @@ class App:
 
         s = requests.Session()
         response = s.get(self.link, headers=headers)
-        links = re.findall(r'src&quot;:&quot;(.*?)&quot;', str(response.content))
+        source = re.search(r'src&quot;:&quot;(.*?)&quot;', str(response.content)).group(1)
 
-        if len(links) > 0:
-            source = links[0].replace('\\', '')
-            source = source.replace('&amp;', '&')
-            filename = re.findall(r'[=|/](\d{15})', self.link)[0]
+        if source:
+            source = source.replace('\\', '').replace('&amp;', '&')
+            filename = re.search(r'[=|/](\d{15})', self.link).group(1)
+            print(source)
             video_source = s.get(source, stream=True)
 
             try:
@@ -69,13 +69,8 @@ class App:
                 print("Error al descargar el video: "+e)
             finally:
                 print("Proceso FB terminado.")
-
-
-
-
-
-
-
+        else:
+            raise ValueError("Couldn't find the video source URL")
 
     def instagram(self) -> None:
 
@@ -137,11 +132,15 @@ class App:
         """
 
         # Replacing "you" (from 'youtube.com') with "000" to be redirect to the tool webpage.
-        url = re.sub(r'[www]?(you)', '000', self.link)
+        # url = re.sub(r'[www]?(you)', '000', self.link)
 
         # Sending a request to the tool webpage and getting its content.
-        tool_website = requests.get(url)
-        content = tool_website.text
+        tool_website = 'https://10downloader.com/download'
+
+        # Creating a Session object in order to make multiple requests
+        s = requests.Session()
+        response = s.get(tool_website, params={'v': self.link})
+        content = response.text
 
         # Beautiful Soup will be used for scrape the content
         soup = Bs(content, 'lxml')
@@ -157,7 +156,7 @@ class App:
             filename = filename.replace(char, '')
 
         # Sending another request to the source URL video
-        download_url = requests.get(url_to_download, stream=True)
+        download_url = s.get(url_to_download, stream=True)
 
         # Downloading the video from its source URL
         try:
