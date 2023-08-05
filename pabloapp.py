@@ -162,18 +162,18 @@ class Menu(tk.Menu):
 
     @classmethod
     def open_in_explorer(cls, path:str) -> None:
-        """ Abre el directorio en el explorador de archivos """
+        """ It opens the directory where the videos are saved """
         os.startfile(path)
 
     def changeDirectory(self) -> None:
         """
-        Cambia el directorio donde se guardarán los videos
+        It changes the directory where videos will be saved
         """
 
-        # Abre el explorador de archivos para indicar qué directorio usar
+        # Asking for the new directory
         new_path = tk.filedialog.askdirectory()
 
-        # Cambia la ruta
+        # Changing the directory
         self.parent.path = new_path
         
     def create_section(self):
@@ -216,16 +216,15 @@ class Form(ctk.CTkFrame):
 
     def create_widgets(self):
 
-        # Etiqueta del formulario
+        # Form label
         txt = ctk.CTkLabel(self, text="Ingresa el link de tu video")
         txt.configure(
-                    # fg_color=self.parent.frame_color,
                    text_color=self.parent.fg_color,
                    font=self.parent.title_font
                    )
         txt.pack(pady=18)
 
-        # Creamos el campo de texto para que el usuario ingrese el link
+        # Creating the Entry to request a link
         url = tk.StringVar()
         entry = ctk.CTkEntry(self, textvariable=url)
         _width = self.parent.winfo_width()*1.5
@@ -239,7 +238,7 @@ class Form(ctk.CTkFrame):
         entry.pack(side="left", padx=18)
 
 
-        # Creamos un botón para que el usuario comience su descarga
+        # Download button
         btn_download = ctk.CTkButton(self)
         btn_download.configure(
                             fg_color="#33b249",
@@ -252,10 +251,9 @@ class Form(ctk.CTkFrame):
                             cursor="hand2",
                             command=lambda:self.download(url.get())
                             )
-        # btn_download.image = img_download
         btn_download.pack(side="left", padx=18, pady=18)
 
-        # Función para que el botón cambie de color
+        # Button color changer
         def checkURL() -> None:
             if "facebook.co" in url.get():
                 btn_download.configure(fg_color=self.parent.fg_fb, hover_color=self.parent.fg_hover_fb)
@@ -266,14 +264,13 @@ class Form(ctk.CTkFrame):
             else:
                 btn_download.configure(fg_color="#33b249")
 
-        # Para que el botón cambie de color si se detecta algo en la URL
+        # This detects when the user paste their link or they press Enter
         entry.bind("<KeyRelease>", lambda event:checkURL())
         entry.bind("<Return>", lambda e:self.download(url.get()))
 
 class Apps(ctk.CTkFrame):
     """
-    Muestra en la interfaz gráfica los botones
-    para cambiar de aplicación.
+    Only to show the cute icons on the left side
     Returns
     -------
     None
@@ -317,7 +314,6 @@ class Header(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent, fg_color=parent.frame_color, corner_radius=8)
 
-        # self.grid(row=0, column=1)
         self.pack(side='top', fill="x", padx=10, pady=10)
         logo = ctk.CTkLabel(self,
                  text=None,
@@ -342,7 +338,6 @@ class Footer(ctk.CTkFrame):
 
         _disclaimer = ctk.CTkLabel(self,
                  text="Terminos y condiciones",
-                #  fg_color=parent.frame_color,
                  text_color=parent.fg_color,
                  font=parent.subtitle_font,
                  underline=True,

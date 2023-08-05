@@ -7,16 +7,16 @@ Created on Sat Jun 24 14:21:49 2023
 
 """
 
-De aquí van a heredar las clases:
+Downloader for PabloApp
+Algorithms to download the content from:
     Facebook
-    Instagram
     YouTube
-
+    Instagram
 """
-import youtube_dl
 import re
 import requests
-from bs4 import BeautifulSoup as BS
+from bs4 import BeautifulSoup as Bs
+from fake_useragent import UserAgent
 
 class App:
     def __init__(self, link=None, path=None) -> None:
@@ -25,7 +25,7 @@ class App:
         """
         self.link = link
         self.path = path
-        
+
 
     def download(self):
         if "facebook.com" in self.link:
@@ -40,26 +40,43 @@ class App:
     def facebook(self) -> None:
         """
         Algorithm for Facebook videos
+
+        We have to change the User-Agent in order not to Facebook can block us and treat us
+        like a robot.
         """
 
-        # Because YouTubeDL cannot download reels from facebook,
-        # web scraping will be the solution, replacing "www" with "m" from the given link.
-        if 'reel' in self.link:
-            self.link = self.link.replace("www", "m")
-            
-            url_reel = requests.get(self.link)
-            content = url_reel.content
-
-            
-            return
-        name = "".join(re.findall('\d{15}', self.link))
-        options = {
-            'outtmpl': f'{self.path}/{name}.mp4'
+        headers = {
+            'User-Agent': UserAgent().chrome
         }
 
-        with youtube_dl.YoutubeDL(options) as ytdl:
-            ytdl.download([self.link])
-  
+        s = requests.Session()
+        response = s.get(self.link, headers=headers)
+        links = re.findall(r'src&quot;:&quot;(.*?)&quot;', str(response.content))
+
+        if len(links) > 0:
+            source = links[0].replace('\\', '')
+            source = source.replace('&amp;', '&')
+            filename = re.findall(r'[=|/](\d{15})', self.link)[0]
+            video_source = s.get(source, stream=True)
+
+            try:
+                with open(f'{self.path}/{filename}.mp4', 'wb') as video:
+                    for data in video_source.iter_content(chunk_size=None):
+                        video.write(data)
+                        print("Downloading...")
+                    print("Se descargó el video!")
+            except Exception as e:
+                print("Error al descargar el video: "+e)
+            finally:
+                print("Proceso FB terminado.")
+
+
+
+
+
+
+
+
     def instagram(self) -> None:
 
         """
@@ -127,7 +144,7 @@ class App:
         content = tool_website.text
 
         # Beautiful Soup will be used for scrape the content
-        soup = BS(content, 'lxml')
+        soup = Bs(content, 'lxml')
 
         # Getting the first downloable link (The Highest Quality)
         tag_highest_quality = soup.find_all('a', 'downloadBtn')[0]
