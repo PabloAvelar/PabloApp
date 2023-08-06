@@ -39,7 +39,9 @@ class UI(ctk.CTk):
 
         # App instance
         self.app = App()
-        
+
+        self.download_thread = None
+
         # This shows the window in the middle of the screen
         _x_win = (self.winfo_screenwidth() // 2) - (size[0]//2)
         _y_win = (self.winfo_screenheight() // 2) - (size[1]//2)
@@ -152,10 +154,13 @@ class UI(ctk.CTk):
                 f.write(new_path)
                 f.close()
 
-    def open_loading_window(self) -> bool:
+    def open_loading_window(self) -> None:
         # Creating a new window to show the loading bar
         if self.loading_window is None or not self.loading_window.winfo_exists():
             self.loading_window = LoadingWindow(self, 'Descargando...', (400, 130))
+            
+            # Passing this window to the App downloader to be destroyed as soon as it finish its process
+            self.app.loading_window = self.loading_window
         else:
             self.loading_window.focus()
 
@@ -187,6 +192,10 @@ class Menu(tk.Menu):
         # Changing the directory
         self.parent.path = new_path
         
+    @property
+    def checkTread(self):
+        return self.parent.download_thread.is_alive()
+
     def create_section(self):
         # Asignamos una sección con cascada
         tools = tk.Menu(self, tearoff=0)
@@ -196,6 +205,7 @@ class Menu(tk.Menu):
         tools.add_command(label="Abrir ruta de descargas", command=lambda:Menu.open_in_explorer(self.parent.path))
         tools.add_command(label="Cambiar ruta de descargas", command=lambda:self.changeDirectory())
         tools.add_command(label="Acerca de", command=lambda:print("Acerca de"))
+        tools.add_command(label="Is thread alive", command=lambda:print("Thead: ", self.checkTread))
 
 class LoadingWindow(ctk.CTkToplevel):
     """
@@ -242,8 +252,6 @@ class LoadingWindow(ctk.CTkToplevel):
         label.pack(expand=True)
         self.loading_bar = self.LoadingBar(self)
         self.loading_bar.start()
-        
-
 
 class Form(ctk.CTkFrame):
     """
@@ -273,15 +281,13 @@ class Form(ctk.CTkFrame):
         self.parent.app.path = self.parent.path
 
         # Checking if the URL is valid in order to create the toplevel
-        # if self.valid_url:
-        
-        # Initializing the loading bar's thread
-        self.parent.open_loading_window()
+        if self.valid_url:
+            # Initializing the download thread
+            self.parent.download_thread = threading.Thread(target=self.parent.app.download, daemon=True)
+            self.parent.download_thread.start()
 
-        # Initializing the downloader
-        # self.parent.app.download()
-        
-
+            # Initializing the Loading Window
+            self.parent.open_loading_window()
 
     def create_widgets(self):
 
@@ -317,7 +323,7 @@ class Form(ctk.CTkFrame):
                             text="Descargar",
                             corner_radius=8,
                             border_spacing=13,
-                            cursor="hand2",
+                            cursor=None,
                             command=lambda:self.download(url.get())
                             )
         btn_download.pack(side="left", padx=18, pady=18)

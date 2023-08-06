@@ -19,22 +19,26 @@ from bs4 import BeautifulSoup as Bs
 from fake_useragent import UserAgent
 
 class App:
-    def __init__(self, link=None, path=None) -> None:
+    def __init__(self, link=None, path=None, loading_window=None) -> None:
         """
         Este activará la barra de carga indeterminada con multihilo
         """
         self.link = link
         self.path = path
+        self.loading_window = loading_window
 
-
-    def download(self):
+    def download(self) -> None:
+        """
+        Returning True if the download has finished
+        """
         if "facebook.com" in self.link:
-            self.facebook()
+            self.facebook()             
         elif "instagram.com" in self.link:
             self.instagram()
         elif "youtube.com" in self.link:
             self.youtube()
         else:
+            self.loading_window.destroy()
             raise ValueError("Link inválido")
 
     def facebook(self) -> None:
@@ -56,7 +60,6 @@ class App:
         if source:
             source = source.replace('\\', '').replace('&amp;', '&')
             filename = re.search(r'[=|/](\d{15})', self.link).group(1)
-            print(source)
             video_source = s.get(source, stream=True)
 
             try:
@@ -69,7 +72,9 @@ class App:
                 print("Error al descargar el video: "+e)
             finally:
                 print("Proceso FB terminado.")
+                self.loading_window.destroy()
         else:
+            self.loading_window.destroy()
             raise ValueError("Couldn't find the video source URL")
 
     def instagram(self) -> None:
@@ -104,9 +109,9 @@ class App:
             url_video = requests.get(url)
 
         except:
+            self.loading_window.destroy()
             raise requests.exceptions.ConnectionError
-
-
+            
         if url_video != None:
             try:
                 with open(f'{self.path}/{getName()}.mp4', 'wb') as video:
@@ -115,10 +120,13 @@ class App:
                         print("Writing data into the video...")
                 print("The download is finished!")
             except Exception as e:
-                raise requests.exceptions.ContentDecodingError
+                print("Error: the download has failed: ", e)
+            finally:
+                self.loading_window.destroy()
         else:
+            self.loading_window.destroy()
             raise requests.exceptions.URLRequired
-        
+
     def youtube(self) -> None:
         """
         Algorithm for YouTube videos.
@@ -146,8 +154,13 @@ class App:
         soup = Bs(content, 'lxml')
 
         # Getting the first downloable link (The Highest Quality)
-        tag_highest_quality = soup.find_all('a', 'downloadBtn')[0]
-        url_to_download = tag_highest_quality.get('href')
+        try:
+            tag_highest_quality = soup.find_all('a', 'downloadBtn')[0]
+            url_to_download = tag_highest_quality.get('href')
+        except IndexError:
+            print("Couldn't find the quality list")
+            self.loading_window.destroy()
+            return
 
         # Getting the filename and making it a valid filename
         invalid = '<>:"/\|?* '
@@ -167,3 +180,4 @@ class App:
             print('Error al descargar el video: ', e)
         finally:
             print("Proceso terminado.")
+            self.loading_window.destroy()
