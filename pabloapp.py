@@ -30,6 +30,7 @@ from PIL import Image
 from App import App
 import webbrowser
 import os
+import threading
 
 class UI(ctk.CTk):
     def __init__(self, title, size):
@@ -109,6 +110,9 @@ class UI(ctk.CTk):
         # Formulario para descargar el contenido
         self.form = Form(self)
 
+        # TopLevel for the Loading Window
+        self.loading_window = None
+
         # Estilos de los frames ttk
         # _style = ttk.Style()
         # _style.configureure('TFrame', background=self.frame_color)   
@@ -148,6 +152,13 @@ class UI(ctk.CTk):
                 f.write(new_path)
                 f.close()
 
+    def open_loading_window(self) -> bool:
+        # Creating a new window to show the loading bar
+        if self.loading_window is None or not self.loading_window.winfo_exists():
+            self.loading_window = LoadingWindow(self, 'Descargando...', (400, 130))
+        else:
+            self.loading_window.focus()
+
 class Menu(tk.Menu):
     """
     Este es el menú desplegable de la ventana
@@ -186,6 +197,54 @@ class Menu(tk.Menu):
         tools.add_command(label="Cambiar ruta de descargas", command=lambda:self.changeDirectory())
         tools.add_command(label="Acerca de", command=lambda:print("Acerca de"))
 
+class LoadingWindow(ctk.CTkToplevel):
+    """
+    The loading window shows when the user press click on the Download button
+    or when the user press Enter.
+
+    This window only appearse when the URL is correct.
+    """
+
+    def __init__(self, main_window, title, size):
+        super().__init__(main_window, fg_color='#1e1e1e')
+        self.title(title)
+        self.geometry(f'{size[0]}x{size[1]}')
+        self.resizable(False, False)
+        self.after(250, lambda: self.displayWidgets())
+
+        self.parent = main_window
+        
+
+    class LoadingBar(ctk.CTkProgressBar):
+        def __init__(self, parent):
+            super().__init__(parent, orientation="horizontal")
+            self.configure(
+                mode="determinate",
+                width=250,
+                height=15,
+                progress_color="green",
+                indeterminate_speed=0.25
+            )
+
+            self.pack(expand=True)
+            
+        def __repr__(self):
+            return "Loading bar class"
+
+    def displayWidgets(self):
+        self.focus()
+        self.iconbitmap('img/logo/icono_app.ico')
+        label = ctk.CTkLabel(self, text="Tu video está siendo descargado...")
+        label.configure(
+            text_color=self.parent.fg_color,
+            font=self.parent.title_font
+        )
+        label.pack(expand=True)
+        self.loading_bar = self.LoadingBar(self)
+        self.loading_bar.start()
+        
+
+
 class Form(ctk.CTkFrame):
     """
     Muestra en la interfaz gráfica un campo de texto y un botón
@@ -202,16 +261,26 @@ class Form(ctk.CTkFrame):
         super().__init__(parent, fg_color=parent.frame_color, corner_radius=8)
         self.parent = parent
         self.pack(side="top", expand=True)
+
+        self.valid_url = False
+        self.toplevel = False
         
         self.create_widgets()
 
-    def download(self, url):
+    def download(self, url) -> None:
         # Re-assigning values to the App instance.
         self.parent.app.link = url
         self.parent.app.path = self.parent.path
 
+        # Checking if the URL is valid in order to create the toplevel
+        # if self.valid_url:
+        
+        # Initializing the loading bar's thread
+        self.parent.open_loading_window()
+
         # Initializing the downloader
-        self.parent.app.download()
+        # self.parent.app.download()
+        
 
 
     def create_widgets(self):
@@ -256,12 +325,16 @@ class Form(ctk.CTkFrame):
         # Button color changer
         def checkURL() -> None:
             if "facebook.co" in url.get():
+                self.valid_url = True
                 btn_download.configure(fg_color=self.parent.fg_fb, hover_color=self.parent.fg_hover_fb)
             elif "instagram.co" in url.get():
+                self.valid_url = True
                 btn_download.configure(fg_color=self.parent.fg_ig, hover_color=self.parent.fg_hover_ig)
             elif "youtube.co" in url.get():
+                self.valid_url = True
                 btn_download.configure(fg_color=self.parent.fg_yt, hover_color=self.parent.fg_hover_yt)
             else:
+                self.valid_url = False
                 btn_download.configure(fg_color="#33b249")
 
         # This detects when the user paste their link or they press Enter
