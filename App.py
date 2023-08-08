@@ -55,9 +55,13 @@ class App:
 
         s = requests.Session()
         response = s.get(self.link, headers=headers)
-        source = re.search(r'src&quot;:&quot;(.*?)&quot;', str(response.content)).group(1)
-
-        if source:
+        # with open('mierda.html', 'w', encoding='utf-8') as f:
+        #     f.write(Bs(response.content, 'lxml').prettify())
+        # return
+        source = re.search(r'src&quot;:&quot;(.*?)&quot;', str(response.content))
+        print(source)
+        if source != None:
+            source = source.group(1)
             source = source.replace('\\', '').replace('&amp;', '&')
             filename = re.search(r'[=|/](\d{15})', self.link).group(1)
             video_source = s.get(source, stream=True)
