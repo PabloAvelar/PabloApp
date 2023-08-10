@@ -154,14 +154,15 @@ class UI(ctk.CTk):
                 f.close()
 
     def open_loading_window(self) -> None:
-        # Creating a frame to show the loading bar
-        if self.loading_window is None or not self.loading_window.winfo_exists():
+
+        if self.loading_window is None or not self.loading_window.winfo_ismapped():
+            # Creating a frame to show the loading bar
             self.loading_window = LoadingWindow(self)
+            # Showing widgets from the loading window
+            self.loading_window.showing_frame()
             
             # Passing this frame to the App downloader to be destroyed as soon as it finish its process
             self.app.loading_window = self.loading_window
-        else:
-            self.loading_window.focus()
 
     def startDownload(self, url:str, valid_url:bool) -> None:
         # Re-assigning values to the App instance.
@@ -169,13 +170,16 @@ class UI(ctk.CTk):
         self.app.path = self.path
 
         # Checking if the URL is valid in order to create the toplevel
-        # if valid_url:
-        #     # Initializing the download thread
-        #     self.download_thread = threading.Thread(target=self.app.download, daemon=True)
-        #     self.download_thread.start()
+        if valid_url:
+            if self.loading_window is None or not self.loading_window.winfo_ismapped():
+                # Initializing the download thread
+                self.download_thread = threading.Thread(target=self.app.download, daemon=True)
+                self.download_thread.start()
+                print("hilo nuevo")
 
-            # Initializing the Loading Window
-        self.open_loading_window()
+                # Initializing the Loading Window
+                self.open_loading_window()
+        
 
 class Menu(tk.Menu):
     """
@@ -207,7 +211,7 @@ class Menu(tk.Menu):
         
     @property
     def checkTread(self):
-        return self.parent.download_thread.is_alive()
+        return self.parent.app.flag
 
     def create_section(self):
         # Asignamos una sección con cascada
@@ -218,7 +222,7 @@ class Menu(tk.Menu):
         tools.add_command(label="Abrir ruta de descargas", command=lambda:Menu.open_in_explorer(self.parent.path))
         tools.add_command(label="Cambiar ruta de descargas", command=lambda:self.changeDirectory())
         tools.add_command(label="Acerca de", command=lambda:print("Acerca de"))
-        tools.add_command(label="Is thread alive", command=lambda:print("Thead: ", self.checkTread))
+        tools.add_command(label="Is thread alive", command=lambda:print("flag: ", self.checkTread))
 
 class LoadingWindow(ctk.CTkFrame):
     """
@@ -231,38 +235,97 @@ class LoadingWindow(ctk.CTkFrame):
     def __init__(self, main_window):
         super().__init__(main_window, fg_color='#1e1e1e')
         self.parent = main_window
-
-        self.configure(width=main_window.winfo_width(), height=main_window.winfo_height())
-        self.place(x=0, y=0)
-
         
+        self.configure(width=self.parent.winfo_width(), height=self.parent.winfo_height())
         
+        self.displayWidgets()
+        # This make the frame the same size as the main window
+        self.parent.bind('<Configure>', lambda e:self.setSize())
 
     class LoadingBar(ctk.CTkProgressBar):
         def __init__(self, parent):
             super().__init__(parent, orientation="horizontal")
             self.configure(
                 mode="determinate",
-                width=250,
+                width=350,
                 height=15,
                 progress_color="green",
-                indeterminate_speed=0.25
+                indeterminate_speed=0.13
             )
 
-            self.pack(expand=True)
+            # self.pack(expand=True)
+            self.place(relx=0.5, rely=0.6, anchor='center')
             
         def __repr__(self):
             return "Loading bar class"
 
+    def setSize(self):
+        self.configure(width=self.parent.winfo_width(), height=self.parent.winfo_height())
+
     def displayWidgets(self):
+        font = ctk.CTkFont(
+            family="Arial",
+            size=25,
+            weight="bold"
+        )
+
+        # Labels #
         label = ctk.CTkLabel(self, text="Tu video está siendo descargado...")
         label.configure(
             text_color=self.parent.fg_color,
-            font=self.parent.title_font
+            font=font
         )
-        label.pack(expand=True)
+        error = ctk.CTkLabel(self, text='')
+        error.configure(
+            text_color=self.parent.fg_color,
+            font = self.parent.subtitle_font
+        )
+
+        # Button #
+
+        return_button = ctk.CTkButton(self)
+        return_button.configure(
+            fg_color="#900000",
+            hover_color="#760000",
+            text_color=self.parent.fg_color,
+            font=self.parent.title_font,
+            text="Regresar",
+            corner_radius=8,
+            border_spacing=13,
+            cursor=None
+        )
+
+        # Alert Images
+
+        check_img = ctk.CTkImage(light_image=Image.open('img/alerts/check.png'), size=(128,128))
+        error_img = ctk.CTkImage(light_image=Image.open('img/alerts/error.png'), size=(128,128))
+
+        # Label for these images
+        check_label = ctk.CTkLabel(self, text='', fg_color='transparent', image=check_img)
+        error_label = ctk.CTkLabel(self, text='', fg_color='transparent', image=error_img)
+
+        # Placing widgets
+        label.place(relx=0.5, rely=0.5, anchor='center')
+        # error.place(relx=0.5, rely=0.6, anchor='center')
+        # return_button.place(relx=0.5, rely=0.8, anchor='center')
+        # alert_label.place(relx=0.5, rely=0.8, anchor='center')
+
+        # These widgets will be changed from App
+        self.parent.app.alert_txt = label
+        self.parent.app.error_txt = error
+        self.parent.app.return_button = return_button
+        self.parent.app.check_label = check_label
+        self.parent.app.error_label = error_label
+
+        
         self.loading_bar = self.LoadingBar(self)
         self.loading_bar.start()
+
+        self.parent.app.loading_bar = self.loading_bar
+
+    def showing_frame(self):
+        self.place(x=0, y=0)
+        
 
 class Form(ctk.CTkFrame):
     """

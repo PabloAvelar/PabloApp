@@ -20,32 +20,74 @@ from fake_useragent import UserAgent
 from tkinter import messagebox
 
 class App:
-    def __init__(self, link=None, path=None, loading_window=None) -> None:
+    def __init__(self, link=None, path=None) -> None:
         """
         Este activará la barra de carga indeterminada con multihilo
         """
+
+        self.flag = False
+
         self.link = link
         self.path = path
-        self.loading_window = loading_window
+        self.loading_window = None
+        self.loading_bar = None
+        self.alert_txt = None
+        self.error_txt = None
+        self.return_button = None
 
-    def show_alert(self, type_, error=None):
+        # Alert images
+        self.check_label= None
+        self.error_label= None
+
+    def destroyer(self, obj) -> None:
+        """
+        This function destroyes tkinter objects
+        more specific the loading window and its children
+        """
+        # hiding every child from the object
+        for child in obj.winfo_children():
+            child.place_forget()
+        
+        obj.place_forget()
+        self.flag = False
+        
+    def show_alert(self, type_, error=None) -> None:
+        
+        self.destroyer(self.loading_bar)
+
         if type_ == 'success':
-            messagebox.showinfo('Aviso', 'El video ha sido descargado.')
+            self.check_label.place(relx=0.5, rely=0.3, anchor='center')
+
+            self.alert_txt.configure(text='¡El video ha sido descargado!')
+            self.loading_window.after(3000, lambda:self.destroyer(self.loading_window))
+            
         elif type_ == 'error':
-            messagebox.showerror('Error', 'No se pudo descargar el video: '+error)
+            self.error_label.place(relx=0.5, rely=0.3, anchor='center')
+
+            self.alert_txt.configure(text='Error al descargar el video: ')
+
+            self.error_txt.configure(text=error)
+            self.error_txt.place(relx=0.5, rely=0.6, anchor='center')
+
+            self.return_button.configure(command=lambda:self.destroyer(self.loading_window))
+            self.return_button.place(relx=0.5, rely=0.8, anchor='center')
+
 
     def download(self) -> None:
         """
         Returning True if the download has finished
         """
         if "facebook.com" in self.link:
+            self.flag = True
             self.facebook()             
         elif "instagram.com" in self.link:
+            self.flag = True
             self.instagram()
         elif "youtube.com" in self.link:
+            self.flag = True
             self.youtube()
         else:
-            self.loading_window.destroy()
+            print("cerrando con link invalido")
             raise ValueError("Link inválido")
 
     def facebook(self) -> None:
@@ -85,9 +127,9 @@ class App:
                 self.show_alert('error', e)
             finally:
                 print("Proceso FB terminado.")
-                self.loading_window.destroy()
+                print("cerrando")
         else:
-            self.loading_window.destroy()
+            print("cerrando")
             self.show_alert('error', 'El video no es público.')
             raise ValueError("Couldn't find the video source URL")
 
@@ -123,7 +165,7 @@ class App:
             url_video = requests.get(url)
 
         except:
-            self.loading_window.destroy()
+            print("cerrando")
             self.show_alert('error', 'No se pudo acceder al video.')
             raise requests.exceptions.ConnectionError
             
@@ -139,9 +181,9 @@ class App:
                 print("Error: the download has failed: ", e)
                 self.show_alert('error', e)
             finally:
-                self.loading_window.destroy()
+                print("cerrando")
         else:
-            self.loading_window.destroy()
+            print("cerrando")
             self.show_alert('error', 'No se pudo acceder al video.')
             raise requests.exceptions.URLRequired
 
@@ -177,7 +219,7 @@ class App:
             url_to_download = tag_highest_quality.get('href')
         except IndexError:
             print("Couldn't find the quality list")
-            self.loading_window.destroy()
+            print("cerrando")
             self.show_alert('error', 'No se pudo acceder al video')
             return
 
@@ -201,4 +243,4 @@ class App:
             self.show_alert('error', e)
         finally:
             print("Proceso terminado.")
-            self.loading_window.destroy()
+            print("cerrando")
