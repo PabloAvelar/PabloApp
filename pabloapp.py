@@ -154,11 +154,11 @@ class UI(ctk.CTk):
                 f.close()
 
     def open_loading_window(self) -> None:
-        # Creating a new window to show the loading bar
+        # Creating a frame to show the loading bar
         if self.loading_window is None or not self.loading_window.winfo_exists():
-            self.loading_window = LoadingWindow(self, 'Descargando...', (400, 130))
+            self.loading_window = LoadingWindow(self)
             
-            # Passing this window to the App downloader to be destroyed as soon as it finish its process
+            # Passing this frame to the App downloader to be destroyed as soon as it finish its process
             self.app.loading_window = self.loading_window
         else:
             self.loading_window.focus()
@@ -169,20 +169,13 @@ class UI(ctk.CTk):
         self.app.path = self.path
 
         # Checking if the URL is valid in order to create the toplevel
-        if valid_url:
-            # Initializing the download thread
-            self.download_thread = threading.Thread(target=self.app.download, daemon=True)
-            self.download_thread.start()
+        # if valid_url:
+        #     # Initializing the download thread
+        #     self.download_thread = threading.Thread(target=self.app.download, daemon=True)
+        #     self.download_thread.start()
 
             # Initializing the Loading Window
-            self.open_loading_window()
-
-# class Alerts:
-#     def __init__(self, message):
-#         self.message = message
-        
-#     def success(self):
-#         tk.messagebox.showinfo("Aviso", "El video ha sido descargado exitosamente.")
+        self.open_loading_window()
 
 class Menu(tk.Menu):
     """
@@ -227,22 +220,22 @@ class Menu(tk.Menu):
         tools.add_command(label="Acerca de", command=lambda:print("Acerca de"))
         tools.add_command(label="Is thread alive", command=lambda:print("Thead: ", self.checkTread))
 
-class LoadingWindow(ctk.CTkToplevel):
+class LoadingWindow(ctk.CTkFrame):
     """
-    The loading window shows when the user press click on the Download button
+    The loading frame shows when the user press click on the Download button
     or when the user press Enter.
 
     This window only appearse when the URL is correct.
     """
 
-    def __init__(self, main_window, title, size):
+    def __init__(self, main_window):
         super().__init__(main_window, fg_color='#1e1e1e')
-        self.title(title)
-        self.geometry(f'{size[0]}x{size[1]}')
-        self.resizable(False, False)
-        self.after(250, lambda: self.displayWidgets())
-
         self.parent = main_window
+
+        self.configure(width=main_window.winfo_width(), height=main_window.winfo_height())
+        self.place(x=0, y=0)
+
+        
         
 
     class LoadingBar(ctk.CTkProgressBar):
@@ -262,8 +255,6 @@ class LoadingWindow(ctk.CTkToplevel):
             return "Loading bar class"
 
     def displayWidgets(self):
-        self.focus()
-        self.iconbitmap('img/logo/icono_app.ico')
         label = ctk.CTkLabel(self, text="Tu video está siendo descargado...")
         label.configure(
             text_color=self.parent.fg_color,
