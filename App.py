@@ -17,6 +17,7 @@ import re
 import requests
 from bs4 import BeautifulSoup as Bs
 from fake_useragent import UserAgent
+from tkinter import messagebox
 
 class App:
     def __init__(self, link=None, path=None, loading_window=None) -> None:
@@ -26,6 +27,12 @@ class App:
         self.link = link
         self.path = path
         self.loading_window = loading_window
+
+    def show_alert(self, type_, error=None):
+        if type_ == 'success':
+            messagebox.showinfo('Aviso', 'El video ha sido descargado.')
+        elif type_ == 'error':
+            messagebox.showerror('Error', 'No se pudo descargar el video: '+error)
 
     def download(self) -> None:
         """
@@ -72,13 +79,16 @@ class App:
                         video.write(data)
                         print("Downloading...")
                     print("Se descargó el video!")
+                    self.show_alert('success')
             except Exception as e:
                 print("Error al descargar el video: "+e)
+                self.show_alert('error', e)
             finally:
                 print("Proceso FB terminado.")
                 self.loading_window.destroy()
         else:
             self.loading_window.destroy()
+            self.show_alert('error', 'El video no es público.')
             raise ValueError("Couldn't find the video source URL")
 
     def instagram(self) -> None:
@@ -114,6 +124,7 @@ class App:
 
         except:
             self.loading_window.destroy()
+            self.show_alert('error', 'No se pudo acceder al video.')
             raise requests.exceptions.ConnectionError
             
         if url_video != None:
@@ -123,12 +134,15 @@ class App:
                         video.write(data)
                         print("Writing data into the video...")
                 print("The download is finished!")
+                self.show_alert('success')
             except Exception as e:
                 print("Error: the download has failed: ", e)
+                self.show_alert('error', e)
             finally:
                 self.loading_window.destroy()
         else:
             self.loading_window.destroy()
+            self.show_alert('error', 'No se pudo acceder al video.')
             raise requests.exceptions.URLRequired
 
     def youtube(self) -> None:
@@ -164,6 +178,7 @@ class App:
         except IndexError:
             print("Couldn't find the quality list")
             self.loading_window.destroy()
+            self.show_alert('error', 'No se pudo acceder al video')
             return
 
         # Getting the filename and making it a valid filename
@@ -180,8 +195,10 @@ class App:
             with open(f'{self.path}/{filename}.mp4', 'wb') as video:
                 for data in download_url.iter_content(chunk_size=None):
                     video.write(data)
+                self.show_alert('success')
         except Exception as e:
             print('Error al descargar el video: ', e)
+            self.show_alert('error', e)
         finally:
             print("Proceso terminado.")
             self.loading_window.destroy()

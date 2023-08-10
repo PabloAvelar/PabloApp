@@ -101,7 +101,6 @@ class UI(ctk.CTk):
         # Configuraciones
         self.configure(menu=self.menu) #fg_color=self.bg_color, 
 
-
         # El header de la app
         self.header = Header(self)
 
@@ -163,6 +162,27 @@ class UI(ctk.CTk):
             self.app.loading_window = self.loading_window
         else:
             self.loading_window.focus()
+
+    def startDownload(self, url:str, valid_url:bool) -> None:
+        # Re-assigning values to the App instance.
+        self.app.link = url
+        self.app.path = self.path
+
+        # Checking if the URL is valid in order to create the toplevel
+        if valid_url:
+            # Initializing the download thread
+            self.download_thread = threading.Thread(target=self.app.download, daemon=True)
+            self.download_thread.start()
+
+            # Initializing the Loading Window
+            self.open_loading_window()
+
+# class Alerts:
+#     def __init__(self, message):
+#         self.message = message
+        
+#     def success(self):
+#         tk.messagebox.showinfo("Aviso", "El video ha sido descargado exitosamente.")
 
 class Menu(tk.Menu):
     """
@@ -275,19 +295,19 @@ class Form(ctk.CTkFrame):
         
         self.create_widgets()
 
-    def download(self, url) -> None:
-        # Re-assigning values to the App instance.
-        self.parent.app.link = url
-        self.parent.app.path = self.parent.path
+    # def download(self, url) -> None:
+    #     # Re-assigning values to the App instance.
+    #     self.parent.app.link = url
+    #     self.parent.app.path = self.parent.path
 
-        # Checking if the URL is valid in order to create the toplevel
-        if self.valid_url:
-            # Initializing the download thread
-            self.parent.download_thread = threading.Thread(target=self.parent.app.download, daemon=True)
-            self.parent.download_thread.start()
+    #     # Checking if the URL is valid in order to create the toplevel
+    #     if self.valid_url:
+    #         # Initializing the download thread
+    #         self.parent.download_thread = threading.Thread(target=self.parent.app.startDownload, daemon=True)
+    #         self.parent.download_thread.start()
 
-            # Initializing the Loading Window
-            self.parent.open_loading_window()
+    #         # Initializing the Loading Window
+    #         self.parent.open_loading_window()
 
     def create_widgets(self):
 
@@ -324,7 +344,7 @@ class Form(ctk.CTkFrame):
                             corner_radius=8,
                             border_spacing=13,
                             cursor=None,
-                            command=lambda:self.download(url.get())
+                            command=lambda:self.parent.startDownload(url.get(), self.valid_url)
                             )
         btn_download.pack(side="left", padx=18, pady=18)
 
@@ -345,7 +365,7 @@ class Form(ctk.CTkFrame):
 
         # This detects when the user paste their link or they press Enter
         entry.bind("<KeyRelease>", lambda event:checkURL())
-        entry.bind("<Return>", lambda e:self.download(url.get()))
+        entry.bind("<Return>", lambda e:self.parent.startDownload(url.get(), self.valid_url))
 
 class Apps(ctk.CTkFrame):
     """
