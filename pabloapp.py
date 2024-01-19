@@ -224,8 +224,7 @@ class Menu(tk.Menu):
         # Creamos elementos para ese menú
         tools.add_command(label="Abrir ruta de descargas", command=lambda:Menu.open_in_explorer(self.parent.path))
         tools.add_command(label="Cambiar ruta de descargas", command=lambda:self.changeDirectory())
-        tools.add_command(label="Acerca de", command=lambda:print("Acerca de"))
-        tools.add_command(label="Is thread alive", command=lambda:print("Thead: ", self.checkTread))
+        # tools.add_command(label="Acerca de", command=lambda:print("Acerca de"))
 
 class LoadingWindow(ctk.CTkToplevel):
     """
@@ -435,16 +434,16 @@ class Footer(ctk.CTkFrame):
                  )
         _myname.pack(pady=5)
 
-        _disclaimer = ctk.CTkLabel(self,
-                 text="Terminos y condiciones",
+        my_website = ctk.CTkLabel(self,
+                 text="¡Checa mi portafolio!",
                  text_color=parent.fg_color,
                  font=parent.subtitle_font,
                  underline=True,
                  cursor="hand2"
                  )
-        _disclaimer.pack(pady=5)
+        my_website.pack(pady=5)
 
-        _disclaimer.bind('<Button-1>', lambda e: webbrowser.open_new("https://pabloavelar.mx/"))
+        my_website.bind('<Button-1>', lambda e: webbrowser.open_new("https://pabloavelar.mx/"))
 
 
 if __name__ == '__main__':
