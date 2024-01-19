@@ -15,9 +15,11 @@ Algorithms to download the content from:
 """
 import re
 import requests
-from bs4 import BeautifulSoup as Bs
+from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 from tkinter import messagebox
+from selenium import webdriver
+import time
 
 class App:
     def __init__(self, link=None, path=None, loading_window=None) -> None:
@@ -38,11 +40,19 @@ class App:
         """
         Returning True if the download has finished
         """
+        print("Download started!")
+        print("Link provided: ", self.link)
+        print("Path for the videos: ", self.path)
+
         if "facebook.com" in self.link:
+            print("App: Facebook")
             self.facebook()             
         elif "instagram.com" in self.link:
+            print("App: Instagram")
+            self.link = self.link.replace("reels", "reel")
             self.instagram()
         elif "youtube.com" in self.link:
+            print("App: YouTube")
             self.youtube()
         else:
             self.loading_window.destroy()
@@ -63,7 +73,7 @@ class App:
         s = requests.Session()
         response = s.get(self.link, headers=headers)
         # with open('mierda.html', 'w', encoding='utf-8') as f:
-        #     f.write(Bs(response.content, 'lxml').prettify())
+        #     f.write(BeautifulSoup(response.content, 'lxml').prettify())
         # return
         source = re.search(r'src&quot;:&quot;(.*?)&quot;', str(response.content))
         print(source)
@@ -72,6 +82,7 @@ class App:
             source = source.replace('\\', '').replace('&amp;', '&')
             filename = re.search(r'[=|/](\d{15})', self.link).group(1)
             video_source = s.get(source, stream=True)
+            print("filename: ", filename)
 
             try:
                 with open(f'{self.path}/{filename}.mp4', 'wb') as video:
@@ -92,58 +103,55 @@ class App:
             raise ValueError("Couldn't find the video source URL")
 
     def instagram(self) -> None:
+        def url_cleaner(url):
+            return url.replace('&amp;', "&")
 
-        """
-        Algorithm for instagram videos
-        """
+        op = webdriver.ChromeOptions()
+        op.add_argument('headless')
+        driver = webdriver.Chrome(options=op)
+        driver.get(self.link)
 
-        # It'll be the source URL of the video.
-        url_video = None
+        # Tiempo para que cargue la página en el webdriver
+        time.sleep(4)
 
-        # Trying to get content from the link
-        def prepare_url(url):
-                url = url.replace('\\/', '/')
-                url = url.replace("\\u0025", "%")
-                
-                return url
-        
-        def getName():
-            return "".join(re.findall(r'[l|p]/(.{11})/?', self.link))
-        
+        # Para hacer web scraping con la petición del webdriver
+        soup = BeautifulSoup(driver.page_source, 'lxml')
+
+        # Encuentra el tag del video y asigna un nombre al archivo del video
+        video_tag = soup.find('video')
+        search_filename = re.search(r'(reel|p)/(.*)/', self.link)
+        if video_tag is None:
+            self.show_alert('error', "No se encontró el video")
+
+        if search_filename is None:
+            self.show_alert('error', "No se pudo asignar un nombre de archivo")
+
+        filename = search_filename.group(2) + ".mp4"
+
+        url_video = url_cleaner(video_tag['src'])
+        print("Video was found!")
+        print("URL: ", url_video)
+        print("Filename: ", filename)
+
+        # Proceso de descarga del video
         try:
-            # Getting access and content
-            r = requests.get(self.link)
-            content = r.text
+            r_source = requests.get(url_video)
+            with open(f'{self.path}/{filename}', 'wb') as video:
+                print("Direct Path: ", f'{self.path}/{filename}.mp4')
+                for data in r_source.iter_content(chunk_size=None):
+                    video.write(data)
+                    print("Descargando...")
 
-            # Getting the URL from the source of the actual video from the post
-            get_url = re.findall(r'"contentUrl":"([^"]+)"', content)[0]
+            print("Se ha descargado el video!")
+            self.show_alert('success')
 
-            # Preparing the url 
-            url = prepare_url(get_url)
-            url_video = requests.get(url)
-
-        except:
+        except Exception as e:
+            print("Error al descargar el video: ", e)
+            self.show_alert('error', e)
+        finally:
+            print("Proceso IG terminado.")
             self.loading_window.destroy()
-            self.show_alert('error', 'No se pudo acceder al video.')
-            raise requests.exceptions.ConnectionError
-            
-        if url_video != None:
-            try:
-                with open(f'{self.path}/{getName()}.mp4', 'wb') as video:
-                    for data in url_video.iter_content(chunk_size=None):
-                        video.write(data)
-                        print("Writing data into the video...")
-                print("The download is finished!")
-                self.show_alert('success')
-            except Exception as e:
-                print("Error: the download has failed: ", e)
-                self.show_alert('error', e)
-            finally:
-                self.loading_window.destroy()
-        else:
-            self.loading_window.destroy()
-            self.show_alert('error', 'No se pudo acceder al video.')
-            raise requests.exceptions.URLRequired
+
 
     def youtube(self) -> None:
         """
@@ -169,7 +177,7 @@ class App:
         content = response.text
 
         # Beautiful Soup will be used for scrape the content
-        soup = Bs(content, 'lxml')
+        soup = BeautifulSoup(content, 'lxml')
 
         # Getting the first downloable link (The Highest Quality)
         try:
